@@ -41,7 +41,7 @@ VLLM_HEALTH_TIMEOUT = 600
 VLLM_REQUEST_TIMEOUT = 300
 VLLM_GENERATION_RETRY = 3
 
-JUDGE_MODEL = "gpt-5-mini"
+JUDGE_MODEL = "gpt-5.6-terra"  # PTB harness: gpt-5-mini is not served by our proxy
 
 
 def _model_alias(model_path: str) -> str:

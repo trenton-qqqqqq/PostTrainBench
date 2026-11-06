@@ -102,6 +102,9 @@ API_RETRY_SLEEP = 2
 
 def get_client() -> OpenAI:
     """Get the judge client."""
+    import ptb_proxy  # PTB harness: judge calls go through the Quadrillion proxy
+
+    return ptb_proxy.OpenAI()
     openai_key = os.environ.get("OPENAI_API_KEY")
     if openai_key:
         return OpenAI(api_key=openai_key)
@@ -165,7 +168,7 @@ def grade_criterion(
     conversation: List[dict],
     model_response: str,
     criterion: "RubricCriterion",
-    grader_model: str = "gpt-5-mini",
+    grader_model: str = "gpt-5.6-terra",
     client: Optional[OpenAI] = None,
     max_retries: int = API_MAX_RETRY
 ) -> GradingResult:
@@ -266,7 +269,7 @@ def grade_example(
     conversation: List[dict],
     model_response: str,
     rubric_criteria: List["RubricCriterion"],
-    grader_model: str = "gpt-5-mini",
+    grader_model: str = "gpt-5.6-terra",
     client: Optional[OpenAI] = None,
     max_workers: int = 1
 ) -> ExampleResult:
@@ -362,7 +365,7 @@ def _grade_example_with_index(
 def grade_examples_parallel(
     examples: List["HealthBenchExample"],
     responses: List[str],
-    grader_model: str = "gpt-5-mini",
+    grader_model: str = "gpt-5.6-terra",
     example_workers: int = 4,
     criteria_workers: int = 8,
     max_concurrent_requests: int = 50,
