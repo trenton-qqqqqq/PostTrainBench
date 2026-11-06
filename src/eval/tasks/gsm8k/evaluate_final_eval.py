@@ -109,6 +109,8 @@ def main() -> None:
         'gpu_memory_utilization': args.gpu_memory_utilization,
     }
     model_args.update(template_kwargs(args))
+    # Quadrillion: no torch.compile (it calls nvcc, which our graders lack).
+    model_args["enforce_eager"] = None
 
     eval_out = inspect_eval(
         task,

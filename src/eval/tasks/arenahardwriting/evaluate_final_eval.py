@@ -275,6 +275,8 @@ class VLLMServer:
             os.environ.get("VLLM_API_KEY", ""),
         ]
         command.extend(template_args(self.args))
+        # Quadrillion: no torch.compile (it calls nvcc, which our graders lack).
+        command.append("--enforce-eager")
 
         self.process = subprocess.Popen(command)  # noqa: S603,S607
         self.port = port
