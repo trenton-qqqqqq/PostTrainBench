@@ -4,6 +4,7 @@
 # Each question gets its own generation seed derived from --seed (src/eval/per_sample_seed.py).
 # IMPORTANT: You are NOT allowed to use the OpenAI API for anything but this evaluation script.
 import os
+import shutil
 
 import argparse
 import sys
@@ -275,8 +276,9 @@ class VLLMServer:
             os.environ.get("VLLM_API_KEY", ""),
         ]
         command.extend(template_args(self.args))
-        # Quadrillion: no torch.compile (it calls nvcc, which our graders lack).
-        command.append("--enforce-eager")
+        # Quadrillion: torch.compile calls nvcc; where there is none, run vLLM eager.
+        if shutil.which("nvcc") is None:
+            command.append("--enforce-eager")
 
         self.process = subprocess.Popen(command)  # noqa: S603,S607
         self.port = port

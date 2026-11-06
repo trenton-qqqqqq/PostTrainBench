@@ -14,6 +14,7 @@
 """HealthBench evaluation."""
 
 import os
+import shutil
 import argparse
 import sys
 import atexit
@@ -118,8 +119,9 @@ class VLLMServer:
             os.environ.get("VLLM_API_KEY", ""),
         ]
         command.extend(template_args(self.args))
-        # Quadrillion: no torch.compile (it calls nvcc, which our graders lack).
-        command.append("--enforce-eager")
+        # Quadrillion: torch.compile calls nvcc; where there is none, run vLLM eager.
+        if shutil.which("nvcc") is None:
+            command.append("--enforce-eager")
 
         self.process = subprocess.Popen(command)
         self.port = port

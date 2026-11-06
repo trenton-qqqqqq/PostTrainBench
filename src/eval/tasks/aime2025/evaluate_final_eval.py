@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 
 import argparse
 import sys
@@ -113,8 +114,9 @@ def main() -> None:
         'gpu_memory_utilization': args.gpu_memory_utilization,
     }
     model_args.update(template_kwargs(args))
-    # Quadrillion: no torch.compile (it calls nvcc, which our graders lack).
-    model_args["enforce_eager"] = None
+    # Quadrillion: torch.compile calls nvcc; where there is none, run vLLM eager.
+    if shutil.which("nvcc") is None:
+        model_args["enforce_eager"] = None
 
     eval_out = inspect_eval(
         task,
