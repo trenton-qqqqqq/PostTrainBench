@@ -129,7 +129,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--max-connections",
         type=int,
-        default=1,
+        default=32,  # Quadrillion: was 1; only speed changes, each sample has its own seed
     )
     parser.add_argument(
         "--gpu-memory-utilization",
