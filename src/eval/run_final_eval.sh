@@ -320,7 +320,9 @@ run_evaluation() {
     if [ -n "${GRADER_API_KEY_NAME}" ]; then
         grader_key_env=(--env "${GRADER_API_KEY_NAME}=${!GRADER_API_KEY_NAME}")
     fi
-    nvidia-smi --query-compute-apps=pid --format=csv,noheader | xargs -r kill -9
+    # Quadrillion: only this evaluation's GPUs. A grading host runs several
+    # evaluations at once, one per GPU, and must not kill the others.
+    nvidia-smi ${CUDA_VISIBLE_DEVICES:+--id="$CUDA_VISIBLE_DEVICES"} --query-compute-apps=pid --format=csv,noheader | xargs -r kill -9
     sleep 5
     # The inspect logs go next to the seed's metrics, not to the task directory of the checkout (inspect's default).
     if [ "${EVAL_RUNTIME}" = "local" ]; then
