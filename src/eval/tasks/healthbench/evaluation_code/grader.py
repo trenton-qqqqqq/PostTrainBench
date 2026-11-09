@@ -12,6 +12,20 @@ from typing import Optional, List, TYPE_CHECKING
 
 from openai import OpenAI
 
+# Quadrillion: with PTB_JUDGE_LOG set, every judge call (raw reply, parsed
+# verdict or error) and every failure graded as "not met" is appended to that
+# JSONL file, so a low score can be traced to the judge's actual replies.
+_JUDGE_LOG = os.environ.get("PTB_JUDGE_LOG")
+_judge_log_lock = threading.Lock()
+
+
+def _log_judge(record: dict) -> None:
+    if not _JUDGE_LOG:
+        return
+    line = json.dumps(record, ensure_ascii=False, default=str)
+    with _judge_log_lock, open(_JUDGE_LOG, "a", encoding="utf-8") as f:
+        f.write(line + "\n")
+
 if TYPE_CHECKING:
     from .data_loader import RubricCriterion, HealthBenchExample
 
@@ -213,6 +227,16 @@ def grade_criterion(
             
             grading_response = response.choices[0].message.content
             grading_dict = parse_json_to_dict(grading_response)
+            _log_judge({
+                "event": "reply",
+                "criterion_id": criterion.criterion_id,
+                "criterion": criterion.criterion,
+                "points": criterion.points,
+                "attempt": attempt + 1,
+                "raw": grading_response,
+                "criteria_met": grading_dict.get("criteria_met"),
+                "explanation": grading_dict.get("explanation"),
+            })
             
             # Validate response has required fields
             if "criteria_met" in grading_dict:
@@ -233,6 +257,12 @@ def grade_criterion(
             
         except Exception as e:
             logger.error(f"API error on attempt {attempt + 1}: {e}")
+            _log_judge({
+                "event": "api_error",
+                "criterion_id": criterion.criterion_id,
+                "attempt": attempt + 1,
+                "error": repr(e),
+            })
             last_error = e
             if attempt < max_retries - 1:
                 time.sleep(API_RETRY_SLEEP * (attempt + 1))
@@ -315,6 +345,11 @@ def grade_example(
                 except Exception as e:
                     idx = futures[future]
                     logger.error(f"Future failed for criterion {idx}: {e}")
+                    _log_judge({
+                        "event": "criterion_scored_not_met_after_failure",
+                        "criterion_id": rubric_criteria[idx].criterion_id,
+                        "error": repr(e),
+                    })
                     grading_results[idx] = GradingResult(
                         criterion_id=rubric_criteria[idx].criterion_id,
                         criteria_met=False,
@@ -428,6 +463,11 @@ def grade_examples_parallel(
                 except Exception as e:
                     idx = futures[future]
                     logger.error(f"Example grading failed for index {idx}: {e}")
+                    _log_judge({
+                        "event": "example_scored_zero_after_failure",
+                        "example_id": examples[idx].example_id,
+                        "error": repr(e),
+                    })
                     results[idx] = ExampleResult(
                         example_id=examples[idx].example_id,
                         model_response=responses[idx],
