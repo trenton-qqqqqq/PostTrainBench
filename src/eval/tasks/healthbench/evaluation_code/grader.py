@@ -182,7 +182,7 @@ def grade_criterion(
     conversation: List[dict],
     model_response: str,
     criterion: "RubricCriterion",
-    grader_model: str = "gpt-5.6-terra",
+    grader_model: str = "gpt-6-luna",
     client: Optional[OpenAI] = None,
     max_retries: int = API_MAX_RETRY
 ) -> GradingResult:
@@ -209,7 +209,7 @@ def grade_criterion(
             try:
                 # gpt-5/o1/o3 models require max_completion_tokens and don't support temperature
                 # They also need higher token limits because they use reasoning tokens internally
-                if "gpt-5" in grader_model or "o1" in grader_model or "o3" in grader_model:
+                if "gpt-" in grader_model or "o1" in grader_model or "o3" in grader_model:
                     response = client.chat.completions.create(
                         model=grader_model,
                         messages=[{"role": "user", "content": grader_prompt}],
@@ -299,7 +299,7 @@ def grade_example(
     conversation: List[dict],
     model_response: str,
     rubric_criteria: List["RubricCriterion"],
-    grader_model: str = "gpt-5.6-terra",
+    grader_model: str = "gpt-6-luna",
     client: Optional[OpenAI] = None,
     max_workers: int = 1
 ) -> ExampleResult:
@@ -400,7 +400,7 @@ def _grade_example_with_index(
 def grade_examples_parallel(
     examples: List["HealthBenchExample"],
     responses: List[str],
-    grader_model: str = "gpt-5.6-terra",
+    grader_model: str = "gpt-6-luna",
     example_workers: int = 4,
     criteria_workers: int = 8,
     max_concurrent_requests: int = 50,

@@ -49,7 +49,7 @@ VLLM_GENERATION_RETRY = 3
 MAX_REPETITIONS = 5  # Maximum allowed repetitions of any pattern
 
 BENCHMARK = "arena-hard-v2.0"
-JUDGE_MODEL = "gpt-5.6-terra"  # PTB harness: gpt-5-mini is not served by our proxy
+JUDGE_MODEL = "gpt-6-luna"  # PTB harness: gpt-5-mini is not served by our proxy
 REASONING_EFFORT = "medium"
 JUDGE_CONFIG = "evaluation_code/config/arena-hard-v2.0.yaml"
 JUDGE_MAX_COMPLETION = 49152
